@@ -1,13 +1,15 @@
 "use client";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 
 const RegisterPage = () => {
   const { emailPassRegister, loading, error, googleLogin } = useAuth();
+  const router = useRouter()
   const [formdata, setFormData] = useState({
-    name: "",
+    displayName: "",
     email: "",
     pass: "",
   });
@@ -15,7 +17,12 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await emailPassRegister(formdata.name, formdata.email, formdata.pass);
+      await emailPassRegister(
+        formdata.displayName,
+        formdata.email,
+        formdata.pass,
+      );
+      router.push("/");
     } catch (error) {
       throw error;
     }
@@ -29,23 +36,23 @@ const RegisterPage = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label
-              htmlFor="name"
+              htmlFor="displayName"
               className="mb-2 block text-sm font-medium text-slate-700"
             >
               Name
             </label>
             <input
-              id="name"
-              value={formdata.name}
+              id="displayName"
+              value={formdata.displayName}
               onChange={(e) =>
                 setFormData({
                   ...formdata,
-                  name: e.target.value,
+                  displayName: e.target.value,
                 })
               }
               type="text"
-              name="name"
-              placeholder="john@example.com"
+              name="displayName"
+              placeholder="Your full name"
               required
               className="w-full rounded-md border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
             />

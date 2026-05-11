@@ -7,40 +7,53 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  updateProfile,
 } from "firebase/auth";
 import { onValue, push, ref, remove, set, update } from "firebase/database";
-import { useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const router = useRouter()
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [task, setTask] = useState(null);
   const [success, setSuccess] = useState(null);
 
+  // get current user
+  useEffect(() => {
+    try {
+      const unsubscribe = onAuthStateChanged(auth, (currentuser) => {
+        setCurrentUser(currentuser);
+      });
+      return () => unsubscribe();
+    } catch (error) {
+      throw error;
+    }
+  }, []);
 
-// get current user
-  useEffect(() =>{
-  try {
-    const unsubscribe = onAuthStateChanged(auth, (currentuser) => {
-      setCurrentUser(currentuser);
-    });
-    return () => unsubscribe();
-    
-  } catch (error) {
-    throw error
-  }
-  },[])
-
-//   get current tasks
-
+  //   get current tasks
+  useEffect(() => {
+    try {
+      onValue(ref(db, "task"), (snapshot) => {
+        const data = snapshot.val();
+        const tasks = data
+          ? Object.keys(data).map((id) => ({
+              id,
+              ...data[id],
+            }))
+          : [];
+        const myTasks = tasks.filter((item) => item?.uid === currentUser?.uid);
+        setTask(myTasks);
+      });
+    } catch (error) {
+      throw error;
+    }
+  }, [currentUser]);
 
   // auth email pass
-  const emailPassRegister = async (name,email, pass) => {
+  const emailPassRegister = async (displayName, email, pass) => {
     setLoading(true);
     try {
       const registerResponse = await createUserWithEmailAndPassword(
@@ -49,17 +62,18 @@ export const AuthProvider = ({ children }) => {
         pass,
       );
       const finalResponse = registerResponse?.user;
-
+      await updateProfile(finalResponse, {
+        displayName: displayName,
+      });
       await set(ref(db, `user/${finalResponse.uid}`), {
         uid: finalResponse.uid,
-        name: name || "",
+        displayName: displayName || "",
         email: finalResponse.email,
       });
-      setCurrentUser(finalResponse);
+      setCurrentUser({ ...finalResponse, displayName });
       console.log("registered", finalResponse);
       setLoading(false);
       setError(null);
-      router("/")
     } catch (error) {
       setError(error?.message);
       setLoading(false);
@@ -78,7 +92,6 @@ export const AuthProvider = ({ children }) => {
       setCurrentUser(finalResponse);
       console.log("registered", finalResponse);
       setLoading(false);
-       router("/");
     } catch (error) {
       setError(error?.message);
     }
@@ -111,15 +124,13 @@ export const AuthProvider = ({ children }) => {
 
       await set(ref(db, `user/${finalResponse.uid}`), {
         uid: finalResponse.uid,
-        name: finalResponse.displayName || "",
+        displayName: finalResponse.displayName || "",
         email: finalResponse.email,
         photoURL: finalResponse.photoURL || "",
       });
 
       setCurrentUser(finalResponse);
       setError(null);
-       router("/");
-       
     } catch (error) {
       setError(error.message);
     } finally {
@@ -128,11 +139,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   // task
-  const addTask = async (task, userId) => {
+  const addTask = async (task, uid) => {
     setLoading(true);
     const finalResponse = {
       task,
-      userId,
+      uid,
     };
     try {
       await push(ref(db, "task"), finalResponse);
@@ -195,6 +206,6 @@ export const AuthProvider = ({ children }) => {
   return <AuthContext.Provider value={values}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () =>{
-   return useContext(AuthContext)
-}
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
