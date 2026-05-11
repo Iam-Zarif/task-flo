@@ -11,9 +11,8 @@ console.log(currentUser)
     description: "",
     teamSize: "",
   });
-  console.log("Tasks" , task)
+  console.log("task" , task)
 
-  const tasks = Array.isArray(task) ? task : task ? [task] : [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -69,8 +68,8 @@ console.log(currentUser)
           <p className="mt-1 text-sm text-slate-500">{currentUser?.email}</p>
 
           <div className="mt-5 rounded-xl bg-slate-100 px-4 py-3">
-            <p className="text-sm text-slate-500">Total Tasks</p>
-            <p className="text-2xl font-bold text-slate-900">{tasks.length}</p>
+            <p className="text-sm text-slate-500">Total task</p>
+            <p className="text-2xl font-bold text-slate-900">{task?.length}</p>
           </div>
         </section>
 
@@ -130,16 +129,16 @@ console.log(currentUser)
         {/* Task List Box */}
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-xl font-semibold text-slate-900">
-            My Tasks
+            My task
           </h2>
 
-          {tasks.length === 0 ? (
+          {task?.length === 0 ? (
             <p className="rounded-lg bg-slate-100 px-4 py-3 text-center text-sm text-slate-500">
-              No tasks found
+              No task found
             </p>
           ) : (
             <div className="space-y-3">
-              {tasks.map((item) => (
+              {task?.map((item) => (
                 <div
                   key={item.id}
                   className="rounded-xl border border-slate-200 bg-slate-50 p-4"
